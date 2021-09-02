@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Qnverter.iml" filepath="$PROJECT_DIR$/.idea/Qnverter.iml" />
+      <module fileurl="file://$USER_HOME$/audok/audok/.idea/audok.iml" filepath="$USER_HOME$/audok/audok/.idea/audok.iml" />
     </modules>
   </component>
 </project>

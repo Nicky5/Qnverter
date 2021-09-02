@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Qnverter
+GenericName=Text Converter
+Comment=Convert Text in a click
+Icon=qnverter
+Exec=/usr/bin/qnverter %u
+TryExec=/usr/bin/qnverter
+StartupNotify=false
+Terminal=false

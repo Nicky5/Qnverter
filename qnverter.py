@@ -21,16 +21,14 @@ from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QTextEdit, QVBoxLayout, QHB
 
 version = '1.0.0'
 items = []
-base_path = join(pathlib.Path.home(), 'Qnverter')
+install_path = join(os.sep, 'opt', 'Qnverter')
+base_path = join(os.path.expanduser('~'), 'Qnverter')
 config_path = join(base_path, 'config')
 icons_path = join(base_path, 'icons')
 resources_path = join(base_path, 'resources')
 scripts_path = join(base_path, 'scripts')
 
 class Window(QWidget):
-    '''
-    represents the application window
-    '''
 
     def __init__(self):
         super().__init__()
@@ -75,7 +73,7 @@ class Window(QWidget):
         self.highlight_checkbox = QToolButton()
         self.highlight_checkbox.setDisabled(True)
         self.highlight_checkbox.setCheckable(True)
-        self.highlight_checkbox.setIcon(QIcon(join(resources_path, 'flashlight.png')))
+        self.highlight_checkbox.setIcon(QIcon(join(resources_path, 'highlighter.png')))
         self.highlight_checkbox.setIconSize(QSize(tbh - 10, tbh - 10))
         self.highlight_checkbox.setMinimumHeight(tbh)
         self.highlight_checkbox.setMinimumWidth(tbh)
@@ -176,9 +174,9 @@ class Window(QWidget):
         directory_button.setText('open base directory')
         directory_button.clicked.connect(lambda: open_on_external_programm(base_path))
 
-        redownload_button = QPushButton()
-        redownload_button.setText('redownload scripts')
-        redownload_button.clicked.connect(set_scripts)
+        reset_button = QPushButton()
+        reset_button.setText('reset scripts')
+        reset_button.clicked.connect(reset_scripts)
 
         grid = QGridLayout()
         v_layout = QVBoxLayout()
@@ -194,7 +192,7 @@ class Window(QWidget):
         button_layout = QHBoxLayout()
         button_layout.addWidget(directory_button)
         button_layout.addStretch()
-        button_layout.addWidget(redownload_button)
+        button_layout.addWidget(reset_button)
         v_layout.addWidget(icon_label)
         v_layout.addWidget(title_label)
         v_layout.addWidget(version_label)
@@ -780,24 +778,25 @@ def saveFileDialog(parent=None):
     if fileName:
         return fileName
 
-def set_scripts():
-    f = open(join(base_path, 'temp.zip'), 'wb')
-    f.write(requests.get('https://github.com/Nicky5/Qnverter-scripts/archive/refs/heads/main.zip',
-                         allow_redirects=True).content)
-    f.close()
-    zipfile.ZipFile(join(base_path, 'temp.zip'), 'r').extractall(base_path)
-    for i in listdir(join(base_path, 'Qnverter-scripts-main')):
-        if isdir(join(base_path, i)):
-            for file in listdir(join(base_path, 'Qnverter-scripts-main', i)):
-                if isfile(join(base_path, i, file)):
-                    os.remove(join(base_path, i, file))
-                shutil.move(join(base_path, 'Qnverter-scripts-main', i, file), join(base_path, i))
-            continue
-        shutil.move(join(base_path, 'Qnverter-scripts-main', i), join(base_path))
-    os.remove(join(base_path, 'temp.zip'))
-    for i in listdir(join(base_path, 'Qnverter-scripts-main')):
-        os.rmdir(join(base_path, 'Qnverter-scripts-main', i))
-    os.rmdir(join(base_path, 'Qnverter-scripts-main'))
+def reset_scripts():
+    if not isdir(base_path):
+        os.mkdir(base_path)
+        
+    if not isdir(resources_path):
+        os.mkdir(resources_path)
+    for i in listdir(join(install_path ,'resources')):
+        source = join(install_path ,'resources', i)
+        if isfile(join(resources_path, i)):
+            os.remove(join(resources_path, i))
+        shutil.copy(source, resources_path)
+            
+    if not isdir(scripts_path):
+        os.mkdir(scripts_path)
+    for i in listdir(join(install_path ,'scripts')):
+        source = join(install_path ,'scripts', i)
+        if isfile(join(scripts_path, i)):
+            os.remove(join(scripts_path, i))
+        shutil.copy(source, scripts_path)
 
 def is_first_run():
     setting = Settings(join(config_path, 'first_run.json'), first_run=True)
@@ -818,11 +817,11 @@ def Exeption_handler(e, silent=False):
         raise e
 
 def main():
+    app = QApplication(sys.argv)
+    app.setStyle('Fusion')
     try:
         if is_first_run():
-            set_scripts()
-        app = QApplication(sys.argv)
-        app.setStyle('Fusion')
+            reset_scripts()
         load_scripts()
         window = Window()
         window.setWindowIcon(QIcon(join(resources_path, 'icon.png')))

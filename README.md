@@ -1,5 +1,5 @@
 # Qnverter
-Python crossplatform application for quick text conversions.
+Python application for quick text conversions.
 
 ### What is Qnverter
 its a quick way of converting any textbased contents in a fast and easy way, wich also means you dont't have to give up your data to some website on the internet just to be able to convert a few json files. 
