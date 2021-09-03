@@ -1,23 +1,25 @@
 #!/usr/bin/python
 import json
 import os
-import pathlib
 import shutil
 import subprocess
 import sys
-import zipfile
 from inspect import isgeneratorfunction
 from os import listdir
 from os.path import join, isdir, isfile
 from random import randint
 
-import requests as requests
-from PyQt5 import Qt, QtGui
-from PyQt5.QtCore import QSize, QRect, Qt, QStringListModel
-from PyQt5.QtGui import QPainter, QTextFormat, QPixmap, QTextCursor, QIcon
-from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QTextEdit, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, \
-    QCompleter, QLineEdit, QLabel, QApplication, QAbstractButton, QToolButton, QDialog, \
-    QErrorMessage, QDesktopWidget, QFileDialog, QGridLayout
+try:
+    import requests as requests
+    from PyQt5 import Qt, QtGui
+    from PyQt5.QtCore import QSize, QRect, Qt, QStringListModel
+    from PyQt5.QtGui import QPainter, QTextFormat, QPixmap, QTextCursor, QIcon
+    from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QTextEdit, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, \
+        QCompleter, QLineEdit, QLabel, QApplication, QAbstractButton, QToolButton, QDialog, \
+        QErrorMessage, QDesktopWidget, QFileDialog, QGridLayout
+except ImportError as e:
+    print("looks like you are missing some pip libraries. go back to the github page and ")
+    raise e
 
 version = '1.0.0'
 items = []

@@ -13,6 +13,7 @@ all:
 	@echo "run \'make install' to install qnverter"
 
 install:
+	pip install -r requirements.txt
 	-mkdir -p $(BINDIR)
 	-mkdir -p $(APPDIR)
 	-mkdir -p $(SCRIPTDIR)

@@ -1162,6 +1162,7 @@ $RECYCLE.BIN/
 *.msix
 *.msm
 *.msp
+snap
 
 # Windows shortcuts
 *.lnk
