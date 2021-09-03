@@ -15,8 +15,8 @@ description: |
   own scripts and share them with me as im curious to see how bored people can get nowdays
 
 
-grade: devel # must be 'stable' to release into candidate/stable channels
-confinement: devmode # use 'strict' once you have the right plugs and slots
+grade: stable # must be 'stable' to release into candidate/stable channels
+confinement: strict # use 'strict' once you have the right plugs and slots
 
 parts:
   python:
@@ -33,6 +33,10 @@ parts:
       - requests==2.26.0
       - setuptools==57.4.0
       - urllib3==1.26.6
+
   qnverter:
     plugin: make
     source: .
+    build-snaps:
+      - kde-frameworks-5-core18-sdk
+      - kde-frameworks-5-core18
