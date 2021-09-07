@@ -614,7 +614,7 @@ class Item:
                  author="me",
                  description="this description is used to describe some stuff thatb is extra and not really used "
                              "other than for texting but ok", icon_link=None):
-        if icon_link is not None and isfile(join(icons_path, icon)):
+        if icon_link is not None and not isfile(join(icons_path, icon)):
             f = open(join(icons_path, icon), 'wb')
             f.write(requests.get(icon_link, allow_redirects=True).content)
             f.close()
