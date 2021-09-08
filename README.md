@@ -7,14 +7,11 @@ The entire application is written in pure python and uses the PyQt module to gen
 
 Im currently planning to add a syntax highlighter (even tough it didn't end well last time i tried) and a proper script repository where everyone can post their own scripts and contribute to the project. In the meantime feel to create your own scripts and share them with me. Im curious to see how bored people can get nowdays
 
-# Schreenshots
-![schreenshot1.png](schreenshot1.png)
-![screenshot2.png](screenshot2.png))
-
 ### current way of installing the programm
-clone or dowload the repository.
+first make sure to have a python interpreter installed on your computer and run `pip install -r requirements.txt` to make sure to have downloaded all python dependecies necessary for the programm to run properly.
 
-Then run following commands to setup the application
+Additionally clone or dowload the repository to get it on your local hard drive
+and finally run following commands to setup the application
 ```
 make
 make install
@@ -22,3 +19,6 @@ make install
  
 to uninstall just run ```make uninstall```
 
+# Schreenshots
+![schreenshot1.png](schreenshot1.png)
+![screenshot2.png](screenshot2.png))
