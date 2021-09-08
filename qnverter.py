@@ -4,6 +4,9 @@ import os
 import shutil
 import subprocess
 import sys
+import traceback
+
+import pkg_resources
 from inspect import isgeneratorfunction
 from os import listdir
 from os.path import join, isdir, isfile
@@ -13,7 +16,7 @@ try:
     import requests as requests
     from PyQt5 import Qt, QtGui
     from PyQt5.QtCore import QSize, QRect, Qt, QStringListModel
-    from PyQt5.QtGui import QPainter, QTextFormat, QPixmap, QTextCursor, QIcon
+    from PyQt5.QtGui import QColor, QPainter, QTextFormat, QPixmap, QTextCursor, QIcon
     from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QTextEdit, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, \
         QCompleter, QLineEdit, QLabel, QApplication, QAbstractButton, QToolButton, QDialog, \
         QErrorMessage, QDesktopWidget, QFileDialog, QGridLayout
@@ -21,7 +24,7 @@ except ImportError as e:
     print("looks like you are missing some pip libraries. go back to the github page and ")
     raise e
 
-version = '1.0.0'
+version = '1.1.0'
 items = []
 install_path = join(os.sep, 'opt', 'Qnverter')
 base_path = join(os.path.expanduser('~'), 'Qnverter')
@@ -31,14 +34,11 @@ resources_path = join(base_path, 'resources')
 scripts_path = join(base_path, 'scripts')
 
 class Window(QWidget):
-
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Qnverter')
         tbh = 35  # PLEASE, its "TitleBar Height" NOT "To Be Honest".
         self.last_event = Item.example
-        self.sm = Settings(join(config_path, 'TextEdit.json'))  # load settings
-        self.sm.load()
 
         # move to schreen centre
         self.resize(800, 800)
@@ -48,8 +48,8 @@ class Window(QWidget):
         self.move(qtRectangle.topLeft())
 
         # build user interface
-        self.text_box_a = CodeEditor(self.sm, 'a')
-        self.text_box_b = CodeEditor(self.sm, 'b')
+        self.text_box_a = CodeEditor('a')
+        self.text_box_b = CodeEditor('b')
 
         self.command_button = QPushButton('Open command selection')
         self.command_button.setMinimumHeight(tbh)
@@ -292,12 +292,11 @@ class LineNumberArea(QWidget):
         self._code_editor.lineNumberAreaPaintEvent(event)
 
 class CodeEditor(QPlainTextEdit):
-    def __init__(self, settings, type: str, no_rec=False):
+    def __init__(self, type: str, no_rec=False):
         super().__init__()
-        self.sm = settings
         self.type = type
         self.sm_key = f'text_box_{self.type}'
-        self.setPlainText(self.sm.setdefault(self.sm_key, ''))
+        self.setPlainText(settings.setdefault(self.sm_key, ''))
 
         self.line_number_area = LineNumberArea(self)
         self.result_board = CodeEditor(no_rec=True) if no_rec else None
@@ -402,8 +401,8 @@ class CodeEditor(QPlainTextEdit):
         self.setPlainText(f.read())
 
     def on_exit_save(self):
-        self.sm[self.sm_key] = self.text()
-        self.sm.save()
+        settings[self.sm_key] = self.text()
+        settings.save()
 
     def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
         if e.modifiers() == Qt.ControlModifier:
@@ -459,7 +458,8 @@ class Selection(QWidget):
         self.completer = QCompleter()
         self.completer.setModel(self.model)
 
-        self.searchbar = QLineEdit('')
+        self.searchbar = QLineEdit()
+        self.searchbar.setText(settings.get('search_bar_text', ''))
         self.searchbar.textChanged.connect(self.update_items)
         self.searchbar.setCompleter(self.completer)
         self.titlebar.addWidget(self.searchbar, 1)
@@ -499,6 +499,7 @@ class Selection(QWidget):
             Exeption_handler('invalid script', True)
 
     def update_items(self):
+        settings['search_bar_text'] = self.searchbar.text()
         temp = []
         for i in items:
             temp.extend(i.keys)
@@ -538,13 +539,17 @@ class AddScriptButton(QToolButton):
             return
         Exeption_handler('invalid script', True)
 
-class Itemrender(QAbstractButton, ):
+class Itemrender(QAbstractButton):
     icon_size = 32
 
     def __init__(self, item):
         super().__init__(None)
-        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.item = item
+        self.blocked = not self.item.are_dependecies_present()
+        if self.blocked:
+            self.missing_dependecies = ', '.join(self.item.get_missing_dependecies())
+        
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.main_layout = QHBoxLayout()
         self.main_layout.setAlignment(Qt.AlignLeft)
 
@@ -560,6 +565,8 @@ class Itemrender(QAbstractButton, ):
         self.title.setStyleSheet('font-size: 17px;')
         self.title.setMaximumWidth(420)
         self.description = QLabel(item.description)
+        if self.blocked:
+            self.description.setText(f"please install {self.missing_dependecies} first")
         self.description.setMaximumWidth(420)
         self.label_box = QVBoxLayout()
         self.label_box.addWidget(self.title)
@@ -571,10 +578,10 @@ class Itemrender(QAbstractButton, ):
         self.main_layout.addWidget(self.icon_label)
         self.main_layout.addSpacing(10)
         self.main_layout.addLayout(self.label_box)
-        self.setToolTip(f'author: {self.item.author} [{self.item.tags}]')
-
-        # self.setGeometry(0, 0, 960, self.width())
-        # self.resize(self.main_layout.sizeHint())
+        tooltip_text = f'author: {self.item.author} [{self.item.tags}]'
+        if self.blocked:
+            tooltip_text = f"{self.missing_dependecies} packages are needed to use the script. install tehm from pip \n" + tooltip_text
+        self.setToolTip(tooltip_text)
         self.setLayout(self.main_layout)
 
         self.title.setWordWrap(True)
@@ -582,22 +589,26 @@ class Itemrender(QAbstractButton, ):
         self.title.adjustSize()
         self.description.adjustSize()
         self.clicked.connect(self.mouse_action)
-        self.background = QWidget()
 
         self.label_box.setSpacing(0)
         self.main_layout.setSpacing(0)
         self.setMinimumHeight(self.title.height() + self.description.height())
 
     def mouse_action(self):
-        self.parent().parent().parent().parent().parent().done(self.item.uuid)
+        if not self.blocked:
+            self.parent().parent().parent().parent().parent().done(self.item.uuid)
 
     def paintEvent(self, QPaintEvent):
         if self.hasFocus():
             painter = QPainter(self)
             painter.fillRect(self.rect(), self.palette().highlight().color())
-            return
-        painter = QPainter(self)
-        painter.fillRect(self.rect(), self.palette().window().color())
+            if self.blocked:
+                painter.fillRect(self.rect(), QColor(255, 0, 0, 130))
+        else:
+            painter = QPainter(self)
+            painter.fillRect(self.rect(), self.palette().window().color())
+            if self.blocked:
+                painter.fillRect(self.rect(), QColor(255, 0, 0, 30))
 
 class Text:
 
@@ -610,21 +621,26 @@ class Text:
 
 class Item:
 
-    def __init__(self, event, name="example name", tags="some tags spearated by space", icon="icon.png",
+    def __init__(self, script, name="example name", tags="some tags spearated by space", icon="icon.png",
                  author="me",
-                 description="this description is used to describe some stuff thatb is extra and not really used "
-                             "other than for texting but ok", icon_link=None):
-        if icon_link is not None and isfile(join(icons_path, icon)):
+                 description="default description", dependecies=None, icon_link=None):
+        if dependecies is None:
+            dependecies = []
+        if not isdir(icons_path):
+            os.mkdir(icons_path)
+        if icon_link is not None and not isfile(join(icons_path, icon)):
             f = open(join(icons_path, icon), 'wb')
             f.write(requests.get(icon_link, allow_redirects=True).content)
             f.close()
-        self.event = event
+        self.script = script
         self.name = name
         self.tags = tags
+        self.dependecies = dependecies
         self.icon = join(icons_path, icon)
         self.author = author
         self.description = description
         self.uuid = randint(-2147483648, 2147483648)
+        self.reload_script()
         self.itemrender = Itemrender
         self.keys = [self.name] + self.tags.split(' ')
         try:
@@ -634,7 +650,26 @@ class Item:
 
     @staticmethod
     def example(text: Text):
-        return None
+        return text.text
+    
+    def reload_script(self):
+        loc = {}
+        try:
+            exec(self.script, globals(), loc)
+            self.event = loc['func']
+        except Exception as e:
+            Exeption_handler(f'failed to initialize {self.name} script \n{e}', silent=False)
+            self.event = Item.example
+    
+    def are_dependecies_present(self):
+        if len(self.dependecies) < 1:
+            return True
+        return all([i in [i.key for i in pkg_resources.working_set] for i in self.dependecies])
+    
+    def get_missing_dependecies(self):
+        if len(self.dependecies) < 1:
+            return []
+        return [i for i in self.dependecies if i not in [i.key for i in pkg_resources.working_set]]
 
 class Settings(dict):
 
@@ -712,25 +747,16 @@ def load_script(path):
     f = open(path, 'r')
     text = f.read()
     f.close()
-    data = text.split('# data:')
-    script = text.split('# script:')
-    script = script[1].split('\n')
-    for x in script:
-        if x.count('import main') + x.count('main import') > 0:
-            script.remove(x)
-    script = '\n'.join(script) + '\nevent = func'
-    data = json.loads(data[1])
-    loc = {}
-    exec(script, globals(), loc)
-    event = loc['event']
+    data: list = text.split('# data:')
+    script = text.split('# script:')[1]
+    data: dict = json.loads(data[1])
     try:
         index = [i.name for i in items].index(data['name'])
     except ValueError:
         index = len(items)
         items.append(1)
-    data.setdefault('icon_link', None)
-    items[index] = Item(event=event, name=data['name'], author=data['author'], icon=data['icon'], tags=data['tags'],
-                        description=data['description'], icon_link=data['icon_link'])
+    items[index] = Item(script=script, name=data['name'], author=data['author'], icon=data.get('icon'), tags=data.get('tags'),
+                        description=data.get('description'), dependecies=data.get('dependecies'), icon_link=data.get('icon_link'))
 
 def is_valid_script(path, external=False):
     if external:
@@ -832,6 +858,9 @@ def main():
         window.on_exit_save()
     except Exception as e:
         Exeption_handler(e)
+    settings.save()
 
+settings = Settings(join(config_path, 'config.json'))
+settings.load()
 if __name__ == "__main__":
     main()
