@@ -1,13 +1,17 @@
 # data must be stored in JSON format
 
-# data: {
+# data: 
+{
   "name": "digi to ascii",
   "author": "nicky",
   "icon": "abc.png",
   "tags": "digits numbers ascii",
   "description": "converts numbers to ascii characters",
   "icon_link": "https://cdn-icons-png.flaticon.com/512/164/164691.png"
-}# data:   
+}
+
+
+# data:   
 
 
 # any import statemnet directed to the main.py must be left outside the script tag

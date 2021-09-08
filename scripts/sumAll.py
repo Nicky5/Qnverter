@@ -1,13 +1,17 @@
 # data must be stored in JSON format
 
-# data: {
+# data: 
+{
   "name": "sum all",
   "author": "nicky",
   "icon": "numbers.png",
   "tags": "sum add",
   "description": "sums up all numbers it finds",
   "icon_link": "https://cdn-icons-png.flaticon.com/512/3402/3402135.png"
-}# data:   
+}
+
+
+# data:   
 
 
 # any import statemnet directed to the main.py must be left outside the script tag

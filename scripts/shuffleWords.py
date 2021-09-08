@@ -1,13 +1,17 @@
 # data must be stored in JSON format
 
-# data: {
+# data: 
+{
   "name": "shuffle words",
   "author": "nicky",
   "icon": "random.png",
   "tags": "shuffle randomize words",
   "description": "shuffles all words",
   "icon_link": "https://cdn-icons-png.flaticon.com/512/1160/1160231.png"
-}# data:   
+}
+
+
+# data:   
 
 
 # any import statemnet directed to the main.py must be left outside the script tag

@@ -1,13 +1,17 @@
 # data must be stored in JSON format
 
-# data: {
+# data: 
+{
   "name": "join space lines",
   "author": "nicky",
   "icon": "abc.png",
   "tags": "space line join",
   "description": "joins all just space lines to a single space line",
   "icon_link": "https://cdn-icons-png.flaticon.com/512/164/164691.png"
-}# data:   
+}
+
+
+# data:   
 
 
 # any import statemnet directed to the main.py must be left outside the script tag

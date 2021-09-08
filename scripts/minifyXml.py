@@ -1,13 +1,17 @@
 # data must be stored in JSON format
 
-# data: {
+# data: 
+{
   "name": "minify xml",
   "author": "nicky",
   "icon": "xml.png",
   "tags": "xml minify",
   "description": "removes unnessesary space in your xml",
   "icon_link": "https://cdn-icons-png.flaticon.com/512/136/136526.png"
-}# data:   
+}
+
+
+# data:   
 
 
 # any import statemnet directed to the main.py must be left outside the script tag

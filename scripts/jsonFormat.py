@@ -1,13 +1,17 @@
 # data must be stored in JSON format
 
-# data: {
+# data: 
+{
   "name": "json format",
   "author": "nicky",
   "icon": "json.png",
   "tags": "json format",
   "description": "pretty prints a JSON object",
   "icon_link": "https://cdn-icons-png.flaticon.com/512/136/136525.png"
-}# data:   
+}
+
+
+# data:   
 
 
 # any import statemnet directed to the main.py must be left outside the script tag
