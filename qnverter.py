@@ -239,22 +239,22 @@ class Window(QWidget):
         self.execute_event(script.event)
 
     def execute_event(self, event):
-        if isgeneratorfunction(event):
-            self.text_box_b.setPlainText('')
-            try:
-                for i in event(self.get_text_object()):
-                    if i is not None:
-                        self.text_box_b.insertPlainTextAtEnd(i)
-            except Exception as e:
-                Exeption_handler(e, True)
-        else:
-            result = 'error'
-            try:
-                result = event(self.get_text_object())
-            except Exception as e:
-                Exeption_handler(e, True)
-            if result is not None:
-                self.text_box_b.setPlainText(str(result))
+        # if isgeneratorfunction(event):
+        #     self.text_box_b.setPlainText('')
+        #     try:
+        #         for i in event(self.get_text_object()):
+        #             if i is not None:
+        #                 self.text_box_b.insertPlainTextAtEnd(i)
+        #     except Exception as e:
+        #         Exeption_handler(e, True)
+        # else:
+        result = 'error'
+        try:
+            result = event(self.get_text_object())
+        except Exception as e:
+            Exeption_handler(e, True)
+        if result is not None:
+            self.text_box_b.setPlainText(str(result))
 
     def on_exit_save(self):
         self.text_box_a.on_exit_save()
