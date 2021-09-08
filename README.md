@@ -2,16 +2,16 @@
 Python application for quick text conversions.
 
 ### What is Qnverter
-Its a quick way of converting any textbased contents in a fast and easy way, wich also means you dont't have to give up your data to some website on the internet just to be able to convert a few json files. 
+It's a quick way of converting any text-based content in a fast and easy way, which also means you don't have to give up your data to some website on the internet just to be able to convert a few JSON files. 
 The entire application is written in pure python and uses the PyQt module to generate the GUI. You can also install new scripts from inside the application with the press of a button.
 
-Im currently planning to add a syntax highlighter (even tough it didn't end well last time i tried) and a proper script repository where everyone can post their own scripts and contribute to the project. In the meantime feel to create your own scripts and share them with me. Im curious to see how bored people can get nowdays
+I'm currently planning to add a syntax highlighter (even though it didn't end well last time I tried) and a proper script repository where everyone can post their scripts and contribute to the project. In the meantime feel to create your own scripts and share them with me. I'm curious to see how bored people can get nowadays
 
-### current way of installing the programm
-first make sure to have a python interpreter installed on your computer and run `pip install -r requirements.txt` to make sure to have downloaded all python dependecies necessary for the programm to run properly.
+### current way of installing the Application
+first, make sure to have a python interpreter installed on your computer and run `pip install -r requirements.txt` to make sure to have downloaded all python dependencies necessary for the program to run properly.
 
-Additionally clone or dowload the repository to get it on your local hard drive
-and finally run following commands to setup the application
+Additionally, clone or download the repository to get it on your local hard drive
+and finally, run the following commands to set up the application
 ```
 make
 make install
