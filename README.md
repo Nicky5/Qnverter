@@ -68,5 +68,8 @@ well you can use it in three ways:
 - `text.selected` returns everything in the right text editor that is currently selected
 - `text.text` on the other side will only return `text.full_text` if `text.selected` is empty. Else it return `text.selected`
 Using these tools you can create any script you want. 
+
+Once you are done just place the script in the ~/Qnverter/scripts folder (~ being the home directory) and restart the application or use the built-in button on the top-left of the application to import a new script
+
 Thanks for reading the whole documentation. most people don't.
 
