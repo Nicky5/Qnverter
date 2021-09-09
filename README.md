@@ -1,6 +1,8 @@
 # Qnverter
 Python application for quick text conversions.
 
+current version only works for Linux. you still can use the main application script on other operating sistems but there is no real way to install it (yet)
+
 ### What is Qnverter
 It's a quick way of converting any text-based content in a fast and easy way, which also means you don't have to give up your data to some website on the internet just to be able to convert a few JSON files. 
 The entire application is written in pure python and uses the PyQt module to generate the GUI. You can also install new scripts from inside the application with the press of a button.
