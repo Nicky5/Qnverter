@@ -19,9 +19,9 @@ try:
     from PyQt5.QtGui import QColor, QPainter, QTextFormat, QPixmap, QTextCursor, QIcon
     from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QTextEdit, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, \
         QCompleter, QLineEdit, QLabel, QApplication, QAbstractButton, QToolButton, QDialog, \
-        QErrorMessage, QDesktopWidget, QFileDialog, QGridLayout
+        QErrorMessage, QDesktopWidget, QFileDialog, QGridLayout, QSplitter
 except ImportError as e:
-    print("looks like you are missing some pip libraries. go back to the github page and ")
+    print("looks like you are missing some pip libraries. go back to the github page and download them.\n")
     raise e
 
 version = '1.1.0'
@@ -92,14 +92,14 @@ class Window(QWidget):
 
         # glue user interface
         self.main_layout = QVBoxLayout()
-        self.text_box_layout = QHBoxLayout()
+        self.text_box_splitter = QSplitter(Qt.Horizontal)
         self.titlebar = QHBoxLayout()
         self.main_layout.addLayout(self.titlebar)
-        self.main_layout.addLayout(self.text_box_layout)
-        self.text_box_layout.setSpacing(0)
+        self.main_layout.addWidget(self.text_box_splitter)
+        self.text_box_splitter.setHandleWidth(10)
         self.main_layout.setSpacing(0)
-        self.text_box_layout.addWidget(self.text_box_a)
-        self.text_box_layout.addWidget(self.text_box_b)
+        self.text_box_splitter.addWidget(self.text_box_a)
+        self.text_box_splitter.addWidget(self.text_box_b)
         self.titlebar.addWidget(self.add_script_button)
         self.titlebar.addSpacing(5)
         self.titlebar.addWidget(self.highlight_checkbox)
@@ -846,7 +846,6 @@ def Exeption_handler(e, silent=False):
 
 def main():
     app = QApplication(sys.argv)
-    app.setStyle('Fusion')
     try:
         if is_first_run():
             reset_scripts()
