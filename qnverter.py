@@ -5,6 +5,9 @@ import shutil
 import subprocess
 import sys
 import traceback
+import time
+import re
+from multiprocessing import Process
 
 import pkg_resources
 from inspect import isgeneratorfunction
@@ -14,12 +17,13 @@ from random import randint
 
 try:
     import requests as requests
-    from PyQt5 import Qt, QtGui
-    from PyQt5.QtCore import QSize, QRect, Qt, QStringListModel
-    from PyQt5.QtGui import QColor, QPainter, QTextFormat, QPixmap, QTextCursor, QIcon
-    from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QTextEdit, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, \
-        QCompleter, QLineEdit, QLabel, QApplication, QAbstractButton, QToolButton, QDialog, \
-        QErrorMessage, QDesktopWidget, QFileDialog, QGridLayout, QSplitter
+    from PyQt5 import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+    from PyQt5.QtGui import *
+    from pygments import highlight
+    from pygments.lexers import *
+    from pygments.formatter import Formatter
 except ImportError as e:
     print("looks like you are missing some pip libraries. go back to the github page and download them.\n")
     raise e
@@ -260,7 +264,7 @@ class Window(QWidget):
         self.text_box_a.on_exit_save()
         self.text_box_b.on_exit_save()
 
-    def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
+    def keyPressEvent(self, e: QKeyEvent) -> None:
         if e.modifiers() == Qt.ControlModifier:
             if e.key() == Qt.Key_P:
                 self.start_selection()
@@ -280,6 +284,100 @@ class Window(QWidget):
         return Text(self.text_box_b.text(), self.text_box_b.text()[
                                             self.text_box_b.textCursor().selectionStart():self.text_box_b.textCursor().selectionEnd()])
 
+def hex2QColor(c):
+    r=int(c[0:2],16)
+    g=int(c[2:4],16)
+    b=int(c[4:6],16)
+    return QColor(r,g,b)
+
+class QFormatter(Formatter):
+    
+    def __init__(self):
+        Formatter.__init__(self)
+        self.data=[]
+        
+        # Create a dictionary of text styles, indexed
+        # by pygments token names, containing QTextCharFormat
+        # instances according to pygments' description
+        # of each style
+        
+        self.styles={}
+        for token, style in self.style:
+            qtf=QTextCharFormat()
+
+            if style['color']:
+                qtf.setForeground(hex2QColor(style['color'])) 
+            if style['bgcolor']:
+                qtf.setBackground(hex2QColor(style['bgcolor'])) 
+            if style['bold']:
+                qtf.setFontWeight(QFont.Bold)
+            if style['italic']:
+                qtf.setFontItalic(True)
+            if style['underline']:
+                qtf.setFontUnderline(True)
+            self.styles[str(token)]=qtf
+    
+    def format(self, tokensource, outfile):
+        global styles
+        # We ignore outfile, keep output in a buffer
+        self.data=[]
+        
+        # Just store a list of styles, one for each character
+        # in the input. Obviously a smarter thing with
+        # offsets and lengths is a good idea!
+        
+        for ttype, value in tokensource:
+            l=len(value)
+            t=str(ttype)                
+            self.data.extend([self.styles[t],]*l)
+
+class Highlighter(QSyntaxHighlighter):
+
+    def __init__(self, parent, mode):
+        QSyntaxHighlighter.__init__(self, parent)
+        self.tstamp=time.time()
+        
+        # Keep the formatter and lexer, initializing them 
+        # may be costly.
+        self.formatter=QFormatter()
+        self.lexer=get_lexer_by_name(mode)
+        
+    def highlightBlock(self, text):
+        """Takes a block, applies format to the document. 
+        according to what's in it.
+        """
+        
+        # I need to know where in the document we are,
+        # because our formatting info is global to
+        # the document
+        cb = self.currentBlock()
+        p = cb.position()
+
+        # The \n is not really needed, but sometimes  
+        # you are in an empty last block, so your position is
+        # **after** the end of the document.
+        text=self.document().toPlainText()+'/n'
+        
+        # Yes, re-highlight the whole document.
+        # There **mustunicode** be some optimizacion possibilities
+        # but it seems fast enough.
+        highlight(text,self.lexer,self.formatter)
+        
+        # Just apply the formatting to this block.
+        # For titles, it may be necessary to backtrack
+        # and format a couple of blocks **earlier**.
+        timeit = time.time()
+        for i in range(len(text)):
+            try:
+                self.setFormat(i,1,self.formatter.data[p+i])
+            except IndexError:
+                pass
+        print(time.time() - timeit)
+        
+        # I may need to do something about this being called
+        # too quickly.
+        self.tstamp=time.time() 
+
 class LineNumberArea(QWidget):
     def __init__(self, editor):
         QWidget.__init__(self, editor)
@@ -292,10 +390,11 @@ class LineNumberArea(QWidget):
         self._code_editor.lineNumberAreaPaintEvent(event)
 
 class CodeEditor(QPlainTextEdit):
-    def __init__(self, type: str, no_rec=False):
+    def __init__(self, type_: str, no_rec=False):
         super().__init__()
-        self.type = type
+        self.type = type_
         self.sm_key = f'text_box_{self.type}'
+        self.highlighter = Highlighter(self.document(),"python")
         self.setPlainText(settings.setdefault(self.sm_key, ''))
 
         self.line_number_area = LineNumberArea(self)
@@ -404,7 +503,7 @@ class CodeEditor(QPlainTextEdit):
         settings[self.sm_key] = self.text()
         settings.save()
 
-    def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
+    def keyPressEvent(self, e: QKeyEvent) -> None:
         if e.modifiers() == Qt.ControlModifier:
             if e.key() == Qt.Key_S:
                 self.save()
@@ -849,6 +948,7 @@ def main():
     try:
         if is_first_run():
             reset_scripts()
+
         load_scripts()
         window = Window()
         window.setWindowIcon(QIcon(join(resources_path, 'icon.png')))
@@ -856,7 +956,8 @@ def main():
         app.exec()
         window.on_exit_save()
     except Exception as e:
-        Exeption_handler(e)
+        # Exeption_handler(e)
+        raise e
     settings.save()
 
 settings = Settings(join(config_path, 'config.json'))
