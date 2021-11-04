@@ -28,6 +28,7 @@ except ImportError as e:
     print("looks like you are missing some pip libraries. go back to the github page and download them.\n")
     raise e
 
+app = QApplication(sys.argv)
 version = '1.1.0'
 items = []
 install_path = join(os.sep, 'opt', 'Qnverter')
@@ -40,6 +41,7 @@ scripts_path = join(base_path, 'scripts')
 class Window(QWidget):
     def __init__(self):
         super().__init__()
+        self.show()
         self.setWindowTitle('Qnverter')
         tbh = 35  # PLEASE, its "TitleBar Height" NOT "To Be Honest".
         self.last_event = Item.example
@@ -114,6 +116,7 @@ class Window(QWidget):
         self.titlebar.addSpacing(5)
         self.titlebar.addWidget(self.info_button)
         self.setLayout(self.main_layout)
+        app.exec()
 
     def shortcut_window(self):
         class short_cut_render(QHBoxLayout):
@@ -283,100 +286,192 @@ class Window(QWidget):
                                                 self.text_box_a.textCursor().selectionStart():self.text_box_a.textCursor().selectionEnd()])
         return Text(self.text_box_b.text(), self.text_box_b.text()[
                                             self.text_box_b.textCursor().selectionStart():self.text_box_b.textCursor().selectionEnd()])
+def format(color, style=''):
+    """
+    Return a QTextCharFormat with the given attributes.
+    """
+    _color = QColor()
+    if type(color) is not str:
+        _color.setRgb(color[0], color[1], color[2])
+    else:
+        _color.setNamedColor(color)
 
-def hex2QColor(c):
-    r=int(c[0:2],16)
-    g=int(c[2:4],16)
-    b=int(c[4:6],16)
-    return QColor(r,g,b)
+    _format = QTextCharFormat()
+    _format.setForeground(_color)
+    if 'bold' in style:
+        _format.setFontWeight(QFont.Bold)
+    if 'italic' in style:
+        _format.setFontItalic(True)
 
-class QFormatter(Formatter):
-    
-    def __init__(self):
-        Formatter.__init__(self)
-        self.data=[]
-        
-        # Create a dictionary of text styles, indexed
-        # by pygments token names, containing QTextCharFormat
-        # instances according to pygments' description
-        # of each style
-        
-        self.styles={}
-        for token, style in self.style:
-            qtf=QTextCharFormat()
+    return _format
 
-            if style['color']:
-                qtf.setForeground(hex2QColor(style['color'])) 
-            if style['bgcolor']:
-                qtf.setBackground(hex2QColor(style['bgcolor'])) 
-            if style['bold']:
-                qtf.setFontWeight(QFont.Bold)
-            if style['italic']:
-                qtf.setFontItalic(True)
-            if style['underline']:
-                qtf.setFontUnderline(True)
-            self.styles[str(token)]=qtf
-    
-    def format(self, tokensource, outfile):
-        global styles
-        # We ignore outfile, keep output in a buffer
-        self.data=[]
-        
-        # Just store a list of styles, one for each character
-        # in the input. Obviously a smarter thing with
-        # offsets and lengths is a good idea!
-        
-        for ttype, value in tokensource:
-            l=len(value)
-            t=str(ttype)                
-            self.data.extend([self.styles[t],]*l)
+
+# Syntax styles that can be shared by all languages
+
+STYLES = {
+    'keyword': format([200, 120, 50], 'bold'),
+    'types': format([108, 149, 235]),
+    'operator': format([150, 150, 150]),
+    'brace': format('darkGray'),
+    'string': format([20, 110, 100]),
+    'string2': format([30, 120, 110]),
+    'comment': format([128, 128, 128]),
+    'self': format([150, 85, 140], 'italic'),
+    'numbers': format([100, 150, 190]),
+}
+
 
 class Highlighter(QSyntaxHighlighter):
 
-    def __init__(self, parent, mode):
-        QSyntaxHighlighter.__init__(self, parent)
-        self.tstamp=time.time()
-        
-        # Keep the formatter and lexer, initializing them 
-        # may be costly.
-        self.formatter=QFormatter()
-        self.lexer=get_lexer_by_name(mode)
-        
-    def highlightBlock(self, text):
-        """Takes a block, applies format to the document. 
-        according to what's in it.
-        """
-        
-        # I need to know where in the document we are,
-        # because our formatting info is global to
-        # the document
-        cb = self.currentBlock()
-        p = cb.position()
+    keywords = [
+        'and', 'assert', 'break', 'class', 'continue', 'def',
+        'del', 'elif', 'else', 'except', 'exec', 'finally',
+        'for', 'from', 'global', 'if', 'import', 'in',
+        'is', 'lambda', 'not', 'or', 'pass', 'print',
+        'raise', 'return', 'try', 'while', 'yield',
+        'None', 'True', 'False', 'null', 'Null', 'end', 
+        'private', 'public', 'static', 'var', 'val', 'let', 
+        'export', 'fun', 'function', 'func', 'new', 'as', 
+        'where', 'select', 'delete', 'add', 'limit', 'update', 'insert'
+    ]
 
-        # The \n is not really needed, but sometimes  
-        # you are in an empty last block, so your position is
-        # **after** the end of the document.
-        text=self.document().toPlainText()+'/n'
-        
-        # Yes, re-highlight the whole document.
-        # There **mustunicode** be some optimizacion possibilities
-        # but it seems fast enough.
-        highlight(text,self.lexer,self.formatter)
-        
-        # Just apply the formatting to this block.
-        # For titles, it may be necessary to backtrack
-        # and format a couple of blocks **earlier**.
-        timeit = time.time()
-        for i in range(len(text)):
-            try:
-                self.setFormat(i,1,self.formatter.data[p+i])
-            except IndexError:
-                pass
-        print(time.time() - timeit)
-        
-        # I may need to do something about this being called
-        # too quickly.
-        self.tstamp=time.time() 
+    types = [
+        'bool', 'boolean', 'int', 'integer', 'byte', 'short',
+        'long', 'float', 'double', 'array', 'list', 'dict', 
+        'dictionary', 'tuple'
+    ]
+
+    # operators
+    operators = [
+        '=',
+        # Comparison
+        '==', '!=', '<', '<=', '>', '>=',
+        # Arithmetic
+        '\+', '-', '\*', '/', '//', '\%', '\*\*',
+        # In-place
+        '\+=', '-=', '\*=', '/=', '\%=',
+        # Bitwise
+        '\^', '\|', '\&', '\~', '>>', '<<',
+    ]
+
+    # braces
+    braces = [
+        '\{', '\}', '\(', '\)', '\[', '\]',
+    ]
+
+    def __init__(self, document):
+        QSyntaxHighlighter.__init__(self, document)
+
+        # Multi-line strings (expression, flag, style)
+        # FIXME: The triple-quotes in these two lines will mess up the
+        # syntax highlighting from this point onward
+        self.tri_single = (QRegExp("'''"), QRegExp("'''"), 1, STYLES['string2'])
+        self.tri_double = (QRegExp('"""'), QRegExp('"""'), 2, STYLES['string2'])
+        self.multi_dash = (QRegExp('\/\*'), QRegExp('\*\/'), 3, STYLES['string2'])
+
+        rules = []
+
+        # Keyword, operator, and brace rules
+        rules += [(r'\b%s\b' % w, 0, STYLES['keyword'])
+                  for w in Highlighter.keywords]
+        rules += [(r'\b%s\b' % w, 0, STYLES['types'])
+                  for w in Highlighter.types]
+        rules += [(r'%s' % o, 0, STYLES['operator'])
+                  for o in Highlighter.operators]
+        rules += [(r'%s' % b, 0, STYLES['brace'])
+                  for b in Highlighter.braces]
+
+        # All other rules
+        rules += [
+            # 'self'
+            (r'\bself\b', 0, STYLES['self']),
+
+            # Double-quoted string, possibly containing escape sequences
+            (r'"[^"\\(""")]*(\\.[^"\\]*)*"', 0, STYLES['string']),
+            # Single-quoted string, possibly containing escape sequences
+            (r"'[^'\\(''')]*(\\.[^'\\]*)*'", 0, STYLES['string']),
+
+            # From '#' until a newline
+            (r'#[^\n]*', 0, STYLES['comment']),
+            (r'(//)[^\n]*', 0, STYLES['comment']),
+
+            # Numeric literals
+            (r'\b[+-]?[0-9]+[lL]?\b', 0, STYLES['numbers']),
+            (r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b', 0, STYLES['numbers']),
+            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b', 0, STYLES['numbers']),
+        ]
+
+        # Build a QRegExp for each pattern
+        self.rules = [(QRegExp(pat), index, fmt)
+                      for (pat, index, fmt) in rules]
+
+    def highlightBlock(self, text):
+        """Apply syntax highlighting to the given block of text.
+        """
+        # Do other syntax formatting
+        for expression, nth, format in self.rules:
+            index = expression.indexIn(text, 0)
+
+            while index >= 0:
+                # We actually want the index of the nth match
+                index = expression.pos(nth)
+                length = len(expression.cap(nth))
+                self.setFormat(index, length, format)
+                index = expression.indexIn(text, index + length)
+
+        self.setCurrentBlockState(0)
+
+        # Do multi-line strings
+        try:
+            in_multiline = self.match_multiline(text, *self.tri_single)
+            if not in_multiline:
+                in_multiline = self.match_multiline(text, *self.tri_double)
+            if not in_multiline:
+              in_multiline = self.match_multiline(text, *self.multi_dash)
+        except Exception as e:
+            print(e)
+
+    def match_multiline(self, text, start_delimiter, end_delimiter, in_state, style):
+        print(start_delimiter, end_delimiter, in_state, style, self.previousBlockState())
+        """Do highlighting of multi-line strings. ``delimiter`` should be a
+        ``QRegExp`` for triple-single-quotes or triple-double-quotes, and
+        ``in_state`` should be a unique integer to represent the corresponding
+        state changes when inside those strings. Returns True if we're still
+        inside a multi-line string when this function is finished.
+        """
+        # If inside triple-single quotes, start at 0
+        if self.previousBlockState() == in_state:
+            start = 0
+            add = 0
+        # Otherwise, look for the delimiter on this line
+        else:
+            start = start_delimiter.indexIn(text)
+            # Move past this match
+            add = start_delimiter.matchedLength()
+
+        # As long as there's a delimiter match on this line...
+        while start >= 0:
+            # Look for the ending delimiter
+            end = end_delimiter.indexIn(text, start + add)
+            # Ending delimiter on this line?
+            if end >= add:
+                length = end - start + add + end_delimiter.matchedLength()
+                self.setCurrentBlockState(0)
+            # No; multi-line string
+            else:
+                self.setCurrentBlockState(in_state)
+                length = len(text) - start + add
+            # Apply formatting
+            self.setFormat(start, length, style)
+            # Look for the next match
+            start = start_delimiter.indexIn(text, start + length)
+            print(start, self.currentBlockState(), length, add)
+
+        # Return True if still inside a multi-line string, False otherwise
+        if self.currentBlockState() == in_state:
+            return True
+        else:
+            return False
 
 class LineNumberArea(QWidget):
     def __init__(self, editor):
@@ -394,7 +489,7 @@ class CodeEditor(QPlainTextEdit):
         super().__init__()
         self.type = type_
         self.sm_key = f'text_box_{self.type}'
-        self.highlighter = Highlighter(self.document(),"python")
+        self.highlighter = Highlighter(self.document())
         self.setPlainText(settings.setdefault(self.sm_key, ''))
 
         self.line_number_area = LineNumberArea(self)
@@ -820,6 +915,12 @@ class Settings(dict):
             f.write('{}')
             f.close()
 
+def hex2QColor(c):
+    r=int(c[0:2],16)
+    g=int(c[2:4],16)
+    b=int(c[4:6],16)
+    return QColor(r,g,b)
+
 def search_help(my_list: list, query: str):
     for i in my_list:
         if query in i or i in query:
@@ -944,7 +1045,6 @@ def Exeption_handler(e, silent=False):
         raise e
 
 def main():
-    app = QApplication(sys.argv)
     try:
         if is_first_run():
             reset_scripts()
@@ -952,8 +1052,6 @@ def main():
         load_scripts()
         window = Window()
         window.setWindowIcon(QIcon(join(resources_path, 'icon.png')))
-        window.show()
-        app.exec()
         window.on_exit_save()
     except Exception as e:
         # Exeption_handler(e)
