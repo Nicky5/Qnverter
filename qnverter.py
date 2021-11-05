@@ -57,6 +57,9 @@ class Window(QWidget):
         self.text_box_a = CodeEditor('a')
         self.text_box_b = CodeEditor('b')
 
+        self.text_box_a.highlighter = Highlighter(self.text_box_a.document())
+        self.text_box_b.highlighter = Highlighter(self.text_box_b.document())
+
         self.command_button = QPushButton('Open command selection')
         self.command_button.setMinimumHeight(tbh)
         self.command_button.setMaximumWidth(320)
@@ -286,40 +289,6 @@ class Window(QWidget):
                                                 self.text_box_a.textCursor().selectionStart():self.text_box_a.textCursor().selectionEnd()])
         return Text(self.text_box_b.text(), self.text_box_b.text()[
                                             self.text_box_b.textCursor().selectionStart():self.text_box_b.textCursor().selectionEnd()])
-def format(color, style=''):
-    """
-    Return a QTextCharFormat with the given attributes.
-    """
-    _color = QColor()
-    if type(color) is not str:
-        _color.setRgb(color[0], color[1], color[2])
-    else:
-        _color.setNamedColor(color)
-
-    _format = QTextCharFormat()
-    _format.setForeground(_color)
-    if 'bold' in style:
-        _format.setFontWeight(QFont.Bold)
-    if 'italic' in style:
-        _format.setFontItalic(True)
-
-    return _format
-
-
-# Syntax styles that can be shared by all languages
-
-STYLES = {
-    'keyword': format([200, 120, 50], 'bold'),
-    'types': format([108, 149, 235]),
-    'operator': format([150, 150, 150]),
-    'brace': format('darkGray'),
-    'string': format([20, 110, 100]),
-    'string2': format([30, 120, 110]),
-    'comment': format([128, 128, 128]),
-    'self': format([150, 85, 140], 'italic'),
-    'numbers': format([100, 150, 190]),
-}
-
 
 class Highlighter(QSyntaxHighlighter):
 
@@ -341,7 +310,6 @@ class Highlighter(QSyntaxHighlighter):
         'dictionary', 'tuple'
     ]
 
-    # operators
     operators = [
         '=',
         # Comparison
@@ -362,43 +330,54 @@ class Highlighter(QSyntaxHighlighter):
     def __init__(self, document):
         QSyntaxHighlighter.__init__(self, document)
 
+        settings.setdefault("styles", {})
+        settings["styles"].setdefault('keyword', [[200, 120, 50], 'bold'])
+        settings["styles"].setdefault('types', [[108, 149, 235]])
+        settings["styles"].setdefault('operator', [[150, 150, 150]])
+        settings["styles"].setdefault('brace', ['darkGray'])
+        settings["styles"].setdefault('string', [[20, 110, 100]])
+        settings["styles"].setdefault('string2', [[30, 120, 110]])
+        settings["styles"].setdefault('comment', [[128, 128, 128]])
+        settings["styles"].setdefault('self', [[150, 85, 140], 'italic'])
+        settings["styles"].setdefault('numbers', [[100, 150, 190]])
+
         # Multi-line strings (expression, flag, style)
         # FIXME: The triple-quotes in these two lines will mess up the
         # syntax highlighting from this point onward
-        self.tri_single = (QRegExp("'''"), QRegExp("'''"), 1, STYLES['string2'])
-        self.tri_double = (QRegExp('"""'), QRegExp('"""'), 2, STYLES['string2'])
-        self.multi_dash = (QRegExp('\/\*'), QRegExp('\*\/'), 3, STYLES['string2'])
+        self.tri_single = (QRegExp("'''"), QRegExp("'''"), 1, format(*settings['styles']['string2']))
+        self.tri_double = (QRegExp('"""'), QRegExp('"""'), 2, format(*settings['styles']['string2']))
+        self.multi_dash = (QRegExp('\/\*'), QRegExp('\*\/'), 3, format(*settings['styles']['string2']))
 
         rules = []
 
         # Keyword, operator, and brace rules
-        rules += [(r'\b%s\b' % w, 0, STYLES['keyword'])
+        rules += [(r'\b%s\b' % w, 0, format(*settings['styles']['keyword']))
                   for w in Highlighter.keywords]
-        rules += [(r'\b%s\b' % w, 0, STYLES['types'])
+        rules += [(r'\b%s\b' % w, 0, format(*settings['styles']['types']))
                   for w in Highlighter.types]
-        rules += [(r'%s' % o, 0, STYLES['operator'])
+        rules += [(r'%s' % o, 0, format(*settings['styles']['operator']))
                   for o in Highlighter.operators]
-        rules += [(r'%s' % b, 0, STYLES['brace'])
+        rules += [(r'%s' % b, 0, format(*settings['styles']['brace']))
                   for b in Highlighter.braces]
 
         # All other rules
         rules += [
             # 'self'
-            (r'\bself\b', 0, STYLES['self']),
+            (r'\bself\b', 0, format(*settings['styles']['self'])),
 
             # Double-quoted string, possibly containing escape sequences
-            (r'"[^"\\(""")]*(\\.[^"\\]*)*"', 0, STYLES['string']),
+            (r'"[^"\\(""")]*(\\.[^"\\]*)*"', 0, format(*settings['styles']['string'])),
             # Single-quoted string, possibly containing escape sequences
-            (r"'[^'\\(''')]*(\\.[^'\\]*)*'", 0, STYLES['string']),
+            (r"'[^'\\(''')]*(\\.[^'\\]*)*'", 0, format(*settings['styles']['string'])),
 
-            # From '#' until a newline
-            (r'#[^\n]*', 0, STYLES['comment']),
-            (r'(//)[^\n]*', 0, STYLES['comment']),
+            # From '#' or '//' until a newline
+            (r'#[^\n]*', 0, format(*settings['styles']['comment'])),
+            (r'(//)[^\n]*', 0, format(*settings['styles']['comment'])),
 
             # Numeric literals
-            (r'\b[+-]?[0-9]+[lL]?\b', 0, STYLES['numbers']),
-            (r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b', 0, STYLES['numbers']),
-            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b', 0, STYLES['numbers']),
+            (r'\b[+-]?[0-9]+[lL]?\b', 0, format(*settings['styles']['numbers'])),
+            (r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b', 0, format(*settings['styles']['numbers'])),
+            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b', 0, format(*settings['styles']['numbers']))
         ]
 
         # Build a QRegExp for each pattern
@@ -406,8 +385,6 @@ class Highlighter(QSyntaxHighlighter):
                       for (pat, index, fmt) in rules]
 
     def highlightBlock(self, text):
-        """Apply syntax highlighting to the given block of text.
-        """
         # Do other syntax formatting
         for expression, nth, format in self.rules:
             index = expression.indexIn(text, 0)
@@ -432,13 +409,6 @@ class Highlighter(QSyntaxHighlighter):
             print(e)
 
     def match_multiline(self, text, start_delimiter, end_delimiter, in_state, style):
-        print(start_delimiter, end_delimiter, in_state, style, self.previousBlockState())
-        """Do highlighting of multi-line strings. ``delimiter`` should be a
-        ``QRegExp`` for triple-single-quotes or triple-double-quotes, and
-        ``in_state`` should be a unique integer to represent the corresponding
-        state changes when inside those strings. Returns True if we're still
-        inside a multi-line string when this function is finished.
-        """
         # If inside triple-single quotes, start at 0
         if self.previousBlockState() == in_state:
             start = 0
@@ -465,7 +435,6 @@ class Highlighter(QSyntaxHighlighter):
             self.setFormat(start, length, style)
             # Look for the next match
             start = start_delimiter.indexIn(text, start + length)
-            print(start, self.currentBlockState(), length, add)
 
         # Return True if still inside a multi-line string, False otherwise
         if self.currentBlockState() == in_state:
@@ -489,7 +458,6 @@ class CodeEditor(QPlainTextEdit):
         super().__init__()
         self.type = type_
         self.sm_key = f'text_box_{self.type}'
-        self.highlighter = Highlighter(self.document())
         self.setPlainText(settings.setdefault(self.sm_key, ''))
 
         self.line_number_area = LineNumberArea(self)
@@ -915,11 +883,25 @@ class Settings(dict):
             f.write('{}')
             f.close()
 
-def hex2QColor(c):
-    r=int(c[0:2],16)
-    g=int(c[2:4],16)
-    b=int(c[4:6],16)
-    return QColor(r,g,b)
+def format(color, style=''):
+    """
+    Return a QTextCharFormat with the given attributes.
+    """
+    print(color)
+    _color = QColor()
+    if type(color) is not str:
+        _color.setRgb(color[0], color[1], color[2])
+    else:
+        _color.setNamedColor(color)
+
+    _format = QTextCharFormat()
+    _format.setForeground(_color)
+    if 'bold' in style:
+        _format.setFontWeight(QFont.Bold)
+    if 'italic' in style:
+        _format.setFontItalic(True)
+
+    return _format
 
 def search_help(my_list: list, query: str):
     for i in my_list:
@@ -1054,8 +1036,8 @@ def main():
         window.setWindowIcon(QIcon(join(resources_path, 'icon.png')))
         window.on_exit_save()
     except Exception as e:
-        # Exeption_handler(e)
-        raise e
+        Exeption_handler(e)
+        # raise e
     settings.save()
 
 settings = Settings(join(config_path, 'config.json'))
