@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ProjectModuleManager">
-    <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Qnverter.iml" filepath="$PROJECT_DIR$/.idea/Qnverter.iml" />
-      <module fileurl="file://$USER_HOME$/audok/audok/.idea/audok.iml" filepath="$USER_HOME$/audok/audok/.idea/audok.iml" />
-    </modules>
-  </component>
-</project>

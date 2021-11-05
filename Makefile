@@ -28,7 +28,7 @@ install:
 	cp $(RESDIR)/qnverter.png				      ${SHAREICODIR}/qnverter.png
 
 	chmod --recursive 755 ${APPDIR}
-	ln -s ${APPDIR}/qnverter.py $(BINDIR)/qnverter
+	ln -s -f ${APPDIR}/qnverter.py $(BINDIR)/qnverter
 
 uninstall:
 	-rm -f ${SHAREAPPDIR}/qnverter.desktop

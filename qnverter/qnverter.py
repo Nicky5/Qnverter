@@ -7,7 +7,6 @@ import sys
 import traceback
 import time
 import re
-from multiprocessing import Process
 
 import pkg_resources
 from inspect import isgeneratorfunction
@@ -16,20 +15,17 @@ from os.path import join, isdir, isfile
 from random import randint
 
 try:
-    import requests as requests
+    import requests
     from PyQt5 import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
     from PyQt5.QtGui import *
-    from pygments import highlight
-    from pygments.lexers import *
-    from pygments.formatter import Formatter
 except ImportError as e:
     print("looks like you are missing some pip libraries. go back to the github page and download them.\n")
     raise e
 
 app = QApplication(sys.argv)
-version = '1.1.0'
+version = '1.2.3'
 items = []
 install_path = join(os.sep, 'opt', 'Qnverter')
 base_path = join(os.path.expanduser('~'), 'Qnverter')

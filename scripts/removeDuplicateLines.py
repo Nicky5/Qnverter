@@ -19,5 +19,5 @@ from main import Text
 
 # script: 
 def func(text: Text):
-    return '\n'.join(set(text.full_text.split('\n')))
+    return '\n'.join(list(dict.fromkeys(text.full_text.split('\n'))))
 # script: 
