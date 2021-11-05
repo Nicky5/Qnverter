@@ -1,7 +1,7 @@
 # Qnverter
 Python application for quick text conversions.
 
-current version only works for Linux. you still can use the main application script on other operating sistems but there is no real way to install it (yet)
+proper install is only possible on linux. Windows and Mac user can still download and install through pip.
 
 ### What is Qnverter
 It's a quick way of converting any text-based content in a fast and easy way, which also means you don't have to give up your data to some website on the internet just to be able to convert a few JSON files. 
@@ -9,7 +9,8 @@ The entire application is written in pure python and uses the PyQt module to gen
 
 I'm currently planning to add a syntax highlighter (even though it didn't end well last time I tried) and a proper script repository where everyone can post their scripts and contribute to the project. In the meantime feel to create your own scripts and share them with me. I'm curious to see how bored people can get nowadays
 
-### current way of installing the Application
+### Install 
+**Linux only**
 first, make sure to have a python interpreter installed on your computer and run `pip install -r requirements.txt` to make sure to have downloaded all python dependencies necessary for the program to run properly.
 
 Additionally, clone or download the repository to get it on your local hard drive
@@ -18,8 +19,13 @@ and finally, run the following commands to set up the application
 make
 make install
 ```
- 
 to uninstall just run ```make uninstall```
+
+**cross-platform**
+```
+pip install qnverter
+```
+The drawback is that you can only run the application by typing ```qnverter``` in a terminal. 
 
 # Screenshots
 ![schreenshot1.png](schreenshot1.png)
