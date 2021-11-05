@@ -45,6 +45,7 @@ class Window(QWidget):
         self.setWindowTitle('Qnverter')
         tbh = 35  # PLEASE, its "TitleBar Height" NOT "To Be Honest".
         self.last_event = Item.example
+        settings.setdefault("highlight_code", False)
 
         # move to schreen centre
         self.resize(800, 800)
@@ -82,14 +83,14 @@ class Window(QWidget):
         self.info_button.clicked.connect(self.shortcut_window)
 
         self.highlight_checkbox = QToolButton()
-        self.highlight_checkbox.setDisabled(True)
         self.highlight_checkbox.setCheckable(True)
+        self.highlight_checkbox.setChecked(settings["highlight_code"])
         self.highlight_checkbox.setIcon(QIcon(join(resources_path, 'highlighter.png')))
         self.highlight_checkbox.setIconSize(QSize(tbh - 10, tbh - 10))
         self.highlight_checkbox.setMinimumHeight(tbh)
         self.highlight_checkbox.setMinimumWidth(tbh)
         self.highlight_checkbox.setToolTip('syntax highlight coming soon :)')
-        # self.highlight_checkbox.clicked.connect(None)
+        self.highlight_checkbox.clicked.connect(self.highlight_button_event)
 
         self.add_script_button = AddScriptButton()
         self.add_script_button.setIcon(QIcon(join(resources_path, 'add-file.png')))
@@ -266,6 +267,11 @@ class Window(QWidget):
         if result is not None:
             self.text_box_b.setPlainText(str(result))
 
+    def highlight_button_event(self):
+        settings["highlight_code"] = self.highlight_checkbox.isChecked()
+        self.text_box_a.highlighter.rehighlight()
+        self.text_box_a.highlighter.rehighlight()
+
     def on_exit_save(self):
         self.text_box_a.on_exit_save()
         self.text_box_b.on_exit_save()
@@ -372,7 +378,7 @@ class Highlighter(QSyntaxHighlighter):
 
             # From '#' or '//' until a newline
             (r'#[^\n]*', 0, format(*settings['styles']['comment'])),
-            (r'(//)[^\n]*', 0, format(*settings['styles']['comment'])),
+            (r'(\/\/)[^\n]*', 0, format(*settings['styles']['comment'])),
 
             # Numeric literals
             (r'\b[+-]?[0-9]+[lL]?\b', 0, format(*settings['styles']['numbers'])),
@@ -382,31 +388,34 @@ class Highlighter(QSyntaxHighlighter):
 
         # Build a QRegExp for each pattern
         self.rules = [(QRegExp(pat), index, fmt)
-                      for (pat, index, fmt) in rules]
+            for (pat, index, fmt) in rules]
+        self.default_format = QTextCharFormat()
+        self.default_format.setForeground(QPalette().windowText().color())
 
     def highlightBlock(self, text):
         # Do other syntax formatting
-        for expression, nth, format in self.rules:
-            index = expression.indexIn(text, 0)
+        if settings["highlight_code"]:
+            for expression, nth, format in self.rules:
+                index = expression.indexIn(text, 0)
 
-            while index >= 0:
-                # We actually want the index of the nth match
-                index = expression.pos(nth)
-                length = len(expression.cap(nth))
-                self.setFormat(index, length, format)
-                index = expression.indexIn(text, index + length)
+                while index >= 0:
+                    # We actually want the index of the nth match
+                    index = expression.pos(nth)
+                    length = len(expression.cap(nth))
+                    self.setFormat(index, length, format)
+                    index = expression.indexIn(text, index + length)
 
-        self.setCurrentBlockState(0)
 
-        # Do multi-line strings
-        try:
+            # Do multi-line strings
+            self.setCurrentBlockState(0)
             in_multiline = self.match_multiline(text, *self.tri_single)
             if not in_multiline:
                 in_multiline = self.match_multiline(text, *self.tri_double)
             if not in_multiline:
               in_multiline = self.match_multiline(text, *self.multi_dash)
-        except Exception as e:
-            print(e)
+        else:
+            palette = QPalette()
+            self.setFormat(0, len(text), palette.windowText().color())
 
     def match_multiline(self, text, start_delimiter, end_delimiter, in_state, style):
         # If inside triple-single quotes, start at 0
@@ -887,7 +896,6 @@ def format(color, style=''):
     """
     Return a QTextCharFormat with the given attributes.
     """
-    print(color)
     _color = QColor()
     if type(color) is not str:
         _color.setRgb(color[0], color[1], color[2])
