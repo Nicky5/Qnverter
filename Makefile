@@ -20,15 +20,17 @@ install:
 	-mkdir -p $(SHAREAPPDIR)
 	-mkdir -p $(SHAREICODIR)
 
-	cp resources/*.png                                    ${RESDIR}
-	cp scripts/*.py                                     ${SCRIPTDIR}
-	cp qnverter.py                                     ${APPDIR}
+	cp resources/*.png ${RESDIR}
+	cp scripts/*.py ${SCRIPTDIR}
+	cp qnverter/qnverter.py ${APPDIR}
+	cp installpath.txt ${APPDIR}
 
-	cp qnverter.desktop               ${SHAREAPPDIR}/qnverter.desktop
-	cp $(RESDIR)/qnverter.png				      ${SHAREICODIR}/qnverter.png
+	cp qnverter.desktop ${SHAREAPPDIR}/qnverter.desktop
+	cp $(RESDIR)/qnverter.png ${SHAREICODIR}/qnverter.png
 
 	chmod --recursive 755 ${APPDIR}
 	ln -s -f ${APPDIR}/qnverter.py $(BINDIR)/qnverter
+	@echo $(APPDIR) > $(APPDIR)installpath.txt
 
 uninstall:
 	-rm -f ${SHAREAPPDIR}/qnverter.desktop

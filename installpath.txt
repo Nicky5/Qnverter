@@ -1,0 +1,1 @@
+// this file is only used at installtime to specify the default installing location.

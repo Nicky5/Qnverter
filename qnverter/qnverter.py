@@ -13,6 +13,7 @@ from inspect import isgeneratorfunction
 from os import listdir
 from os.path import join, isdir, isfile
 from random import randint
+from inspect import getsourcefile
 
 try:
     import requests
@@ -25,9 +26,10 @@ except ImportError as e:
     raise e
 
 app = QApplication(sys.argv)
-version = '1.2.3'
+version = '1.2.4'
 items = []
-install_path = join(os.sep, 'opt', 'Qnverter')
+install_path = open("installpath.txt", 'r').read().replace('\n', '')
+print(install_path)
 base_path = join(os.path.expanduser('~'), 'Qnverter')
 config_path = join(base_path, 'config')
 icons_path = join(base_path, 'icons')

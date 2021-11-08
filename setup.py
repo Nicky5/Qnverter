@@ -13,7 +13,7 @@ long_description = open(join(here, 'README.md')).read()
 
 setup(
         name='Qnverter',
-        version="1.2.3",
+        version="1.2.4",
         packages = ["qnverter"],
         url='https://github.com/Nicky5/Qnverter',
         license='MIT',
@@ -37,7 +37,6 @@ try:
     os.mkdir(APPDIR)
     os.mkdir(SCRIPTDIR)
     os.mkdir(RESDIR)
-
     for i in os.listdir(join(here, "resources")):
         if i[-4:] == ".png":
             shutil.copy(join(join(here, "resources"), i), RESDIR)
@@ -45,5 +44,9 @@ try:
     for i in os.listdir(join(here, "scripts")):
         if i[-3:] == ".py":
             shutil.copy(join(join(here, "scripts"), i), SCRIPTDIR)
+    f = open(join(APPDIR, "installpath.txt"), 'w')
+    f.write(join(os.path.expanduser('~'), '.qnverter'))
+    f.close()
+
 except Exception as e:
     print(e)
