@@ -65,7 +65,7 @@ class Window(QWidget):
         self.command_button.clicked.connect(self.start_selection)
 
         self.reload_button = QToolButton()
-        self.reload_button.setIcon(QIcon(join(resources_path, 'reload.png')))
+        self.reload_button.setIcon(self.style().standardIcon(getattr(QStyle, 'SP_BrowserReload')))
         self.reload_button.setIconSize(QSize(tbh - 10, tbh - 10))
         self.reload_button.setMinimumHeight(tbh)
         self.reload_button.setMinimumWidth(tbh)
@@ -73,7 +73,7 @@ class Window(QWidget):
         self.reload_button.clicked.connect(load_scripts)
 
         self.info_button = QToolButton()
-        self.info_button.setIcon(QIcon(join(resources_path, 'menu.png')))
+        self.info_button.setIcon(self.style().standardIcon(getattr(QStyle, "SP_FileDialogDetailedView")))
         self.info_button.setIconSize(QSize(tbh - 10, tbh - 10))
         self.info_button.setMinimumHeight(tbh)
         self.info_button.setMinimumWidth(tbh)
@@ -83,15 +83,15 @@ class Window(QWidget):
         self.highlight_checkbox = QToolButton()
         self.highlight_checkbox.setCheckable(True)
         self.highlight_checkbox.setChecked(settings["highlight_code"])
-        self.highlight_checkbox.setIcon(QIcon(join(resources_path, 'highlighter.png')))
+        self.highlight_checkbox.setIcon(self.style().standardIcon(getattr(QStyle, "SP_FileDialogContentsView")))
         self.highlight_checkbox.setIconSize(QSize(tbh - 10, tbh - 10))
         self.highlight_checkbox.setMinimumHeight(tbh)
         self.highlight_checkbox.setMinimumWidth(tbh)
         self.highlight_checkbox.setToolTip('syntax highlight coming soon :)')
         self.highlight_checkbox.clicked.connect(self.highlight_button_event)
-
+        
         self.add_script_button = AddScriptButton()
-        self.add_script_button.setIcon(QIcon(join(resources_path, 'add-file.png')))
+        self.add_script_button.setIcon(self.style().standardIcon(getattr(QStyle, "SP_FileIcon")))
         self.add_script_button.setIconSize(QSize(tbh - 10, tbh - 10))
         self.add_script_button.setMinimumHeight(tbh)
         self.add_script_button.setMinimumWidth(tbh)
